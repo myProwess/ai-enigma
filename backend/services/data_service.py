@@ -17,6 +17,40 @@ from utils.logger import get_logger
 logger = get_logger(__name__)
 
 
+def _clean_content(raw_content: str | None, description: str | None) -> str | None:
+    """
+    Build the best possible content from NewsAPI fields.
+
+    The free-tier /top-headlines truncates `content` to ~200 chars with a
+    '[+NNNN chars]' suffix.  We strip that marker, and if the remaining text
+    is shorter than the `description`, prefer the description instead.
+    """
+    import re
+
+    cleaned = None
+    if raw_content:
+        # Remove the truncation marker e.g. "... [+1234 chars]"
+        cleaned = re.sub(r"\s*\[\+\d+ chars\]\s*$", "", raw_content).strip()
+
+    desc = (description or "").strip()
+
+    # Pick whichever is longer / more informative
+    if cleaned and desc:
+        return cleaned if len(cleaned) >= len(desc) else desc
+    return cleaned or desc or None
+
+
+def _slugify(text: str, max_length: int = 80) -> str:
+    """Convert a title into a URL- and filesystem-safe slug."""
+    import re
+    slug = text.lower().strip()
+    slug = re.sub(r"[^a-z0-9\s-]", "", slug)   # strip non-alphanumerics
+    slug = re.sub(r"[\s]+", "-", slug)           # spaces → hyphens
+    slug = re.sub(r"-{2,}", "-", slug)           # collapse multiple hyphens
+    slug = slug.strip("-")                        # trim leading/trailing hyphens
+    return slug[:max_length]
+
+
 def transform_articles(raw_response: Dict[str, Any], category: str = "Technology") -> List[Dict[str, Any]]:
     """
     Extract and normalise article data from a raw NewsAPI response.
@@ -34,14 +68,21 @@ def transform_articles(raw_response: Dict[str, Any], category: str = "Technology
         source: Dict[str, Any] = article.get("source") or {}
         # Generate a slug from title
         title = article.get("title", "")
-        slug = title.lower().replace(" ", "-").replace(":", "").replace("?", "").replace("!", "").replace(".", "")[:50]
-        
+        if not title or title == "[Removed]":
+            continue  # skip removed / empty articles
+
+        slug = _slugify(title)
+
+        description = article.get("description")
+        raw_content = article.get("content")
+        content = _clean_content(raw_content, description)
+
         transformed.append({
             "id": f"api-{idx}-{int(datetime.now().timestamp())}",
             "title": title,
             "slug": slug,
-            "excerpt": article.get("description", ""),
-            "content": article.get("content", ""),
+            "excerpt": description or (content[:200] + "..." if content and len(content) > 200 else content),
+            "content": content,
             "author": article.get("author") or source.get("name", "Unknown"),
             "publishDate": article.get("publishedAt"),
             "coverImageUrl": article.get("urlToImage"),
@@ -58,9 +99,10 @@ def save_to_json(
     filepath: Optional[str] = None,
 ) -> str:
     """
-    Persist articles to a JSON file with atomic write and deduplication.
+    Persist articles to a JSON file with atomic write.
 
-    New articles are merged with existing data; duplicates (by URL) are skipped.
+    Replaces the entire file with the supplied articles (deduped by URL
+    within the batch).  The caller is responsible for capping the count.
 
     Args:
         articles:  List of transformed article dicts.
@@ -71,16 +113,19 @@ def save_to_json(
     """
     filepath = filepath or Config.DATA_FILE_PATH
 
-    # Load existing data for deduplication
-    existing = load_from_json(filepath)
-    existing_urls: set[str] = {a["url"] for a in existing if a.get("url")}
-
-    new_articles = [a for a in articles if a.get("url") and a["url"] not in existing_urls]
-    merged = existing + new_articles
+    # Deduplicate within the incoming batch by URL
+    seen_urls: set[str] = set()
+    unique_articles: List[Dict[str, Any]] = []
+    for a in articles:
+        url = a.get("url", "")
+        if url and url in seen_urls:
+            continue
+        seen_urls.add(url)
+        unique_articles.append(a)
 
     logger.info(
-        "Saving %d articles (%d new, %d existing) to %s",
-        len(merged), len(new_articles), len(existing), filepath,
+        "Saving %d articles (%d deduplicated) to %s",
+        len(unique_articles), len(articles) - len(unique_articles), filepath,
     )
 
     # Atomic write: write to temp file then rename
@@ -93,8 +138,8 @@ def save_to_json(
             json.dump(
                 {
                     "last_updated": datetime.now(timezone.utc).isoformat(),
-                    "total_articles": len(merged),
-                    "articles": merged,
+                    "total_articles": len(unique_articles),
+                    "articles": unique_articles,
                 },
                 tmp_file,
                 indent=2,

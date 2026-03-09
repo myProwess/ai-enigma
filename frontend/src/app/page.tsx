@@ -19,7 +19,7 @@ export default async function Home() {
       {/* Recent News Grid */}
       <section className="container mx-auto max-w-7xl px-4 md:px-8 py-8 md:py-16">
         <div className="flex items-center justify-between mb-8">
-          <h2 className="text-3xl font-bold tracking-tight">Latest Stories</h2>
+          <h2 className="text-3xl font-bold tracking-tight font-heading">Latest Stories</h2>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">

@@ -1,4 +1,4 @@
-export type Category = "Technology" | "Business" | "Sports" | "Politics";
+export type Category = string;
 
 export interface Article {
     id: string;

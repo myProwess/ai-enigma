@@ -51,3 +51,9 @@ export async function getArticleBySlug(slug: string): Promise<Article | null> {
     const articles = await getAllArticles();
     return articles.find((a) => a.slug === slug) || null;
 }
+
+export async function getUniqueCategories(): Promise<string[]> {
+    const articles = await getAllArticles();
+    const categorySet = new Set(articles.map((a) => a.category));
+    return Array.from(categorySet).sort();
+}
