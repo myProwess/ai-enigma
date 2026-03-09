@@ -19,7 +19,7 @@ def update_news():
         logger.info(f"Fetching headlines for category: {cat}")
         try:
             data = client.get_top_headlines(category=cat, page_size=20)
-            articles = data_service.transform_articles(data)
+            articles = data_service.transform_articles(data, category=cat.capitalize())
             all_transformed_articles.extend(articles)
         except Exception as e:
             logger.error(f"Failed to fetch {cat}: {e}")

@@ -58,7 +58,8 @@ def top_headlines() -> Tuple[Response, int]:
         )
 
         # Transform and persist
-        articles = data_service.transform_articles(data)
+        category = request.args.get("category", "General").capitalize()
+        articles = data_service.transform_articles(data, category=category)
         saved_path = data_service.save_to_json(articles)
 
         return jsonify({
@@ -110,7 +111,7 @@ def category_headlines(category: str) -> Tuple[Response, int]:
             page_size=page_size,
         )
 
-        articles = data_service.transform_articles(data)
+        articles = data_service.transform_articles(data, category=category.capitalize())
         data_service.save_to_json(articles)
 
         return jsonify({

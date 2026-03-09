@@ -17,7 +17,7 @@ from utils.logger import get_logger
 logger = get_logger(__name__)
 
 
-def transform_articles(raw_response: Dict[str, Any]) -> List[Dict[str, Any]]:
+def transform_articles(raw_response: Dict[str, Any], category: str = "Technology") -> List[Dict[str, Any]]:
     """
     Extract and normalise article data from a raw NewsAPI response.
 
@@ -30,19 +30,23 @@ def transform_articles(raw_response: Dict[str, Any]) -> List[Dict[str, Any]]:
     articles: List[Dict[str, Any]] = raw_response.get("articles", [])
     transformed: List[Dict[str, Any]] = []
 
-    for article in articles:
+    for idx, article in enumerate(articles):
         source: Dict[str, Any] = article.get("source") or {}
+        # Generate a slug from title
+        title = article.get("title", "")
+        slug = title.lower().replace(" ", "-").replace(":", "").replace("?", "").replace("!", "").replace(".", "")[:50]
+        
         transformed.append({
-            "source_id": source.get("id"),
-            "source_name": source.get("name", "Unknown"),
-            "author": article.get("author"),
-            "title": article.get("title", ""),
-            "description": article.get("description"),
+            "id": f"api-{idx}-{int(datetime.now().timestamp())}",
+            "title": title,
+            "slug": slug,
+            "excerpt": article.get("description", ""),
+            "content": article.get("content", ""),
+            "author": article.get("author") or source.get("name", "Unknown"),
+            "publishDate": article.get("publishedAt"),
+            "coverImageUrl": article.get("urlToImage"),
+            "category": category,
             "url": article.get("url", ""),
-            "image_url": article.get("urlToImage"),
-            "published_at": article.get("publishedAt"),
-            "content": article.get("content"),
-            "fetched_at": datetime.now(timezone.utc).isoformat(),
         })
 
     logger.info("Transformed %d articles from API response", len(transformed))
