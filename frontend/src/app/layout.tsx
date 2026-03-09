@@ -8,7 +8,7 @@ import { Footer } from "@/components/shared/Footer";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "NewsRepoAI | Intelligent News Aggregation",
+  title: "AI Enigma | Intelligent News Aggregation",
   description: "A modern, intelligent news platform delivering the most critical stories from around the globe.",
 };
 

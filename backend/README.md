@@ -29,8 +29,8 @@ graph LR
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/<your-username>/NewsRepoAI.git
-cd NewsRepoAI
+git clone https://github.com/<your-username>/AI-Enigma.git
+cd AI-Enigma
 ```
 
 ### 2. Create a virtual environment
@@ -113,7 +113,7 @@ curl http://localhost:5000/api/news/saved
 ## 📁 Project Structure
 
 ```
-NewsRepoAI/
+AI Enigma/
 ├── app.py                  # Flask entry point (app factory)
 ├── .env                    # API key (git-ignored)
 ├── .env.example            # Environment template

@@ -45,7 +45,7 @@ export function Footer() {
                 </div>
 
                 <div className="border-t mt-10 pt-6 flex flex-col md:flex-row justify-between items-center text-xs text-muted-foreground">
-                    <p>© {new Date().getFullYear()} NewsRepoAI. All rights reserved.</p>
+                    <p>© {new Date().getFullYear()} AI Enigma. All rights reserved.</p>
                     <div className="flex space-x-4 mt-4 md:mt-0">
                         <Link href="#" className="hover:text-foreground transition-colors">Twitter</Link>
                         <Link href="#" className="hover:text-foreground transition-colors">LinkedIn</Link>

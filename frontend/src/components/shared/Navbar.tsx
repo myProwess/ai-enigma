@@ -16,7 +16,7 @@ export function Navbar() {
                 <div className="mr-8 hidden md:flex">
                     <Link href="/" className="flex items-center space-x-2">
                         <span className="hidden font-bold sm:inline-block text-xl tracking-tight">
-                            NewsRepo<span className="text-primary">AI</span>
+                            AI <span className="text-primary">Enigma</span>
                         </span>
                     </Link>
                 </div>
@@ -24,7 +24,7 @@ export function Navbar() {
                 {/* Mobile Logo */}
                 <div className="flex flex-1 md:hidden">
                     <Link href="/" className="font-bold text-lg tracking-tight">
-                        NewsRepo<span className="text-primary">AI</span>
+                        AI <span className="text-primary">Enigma</span>
                     </Link>
                 </div>
 
